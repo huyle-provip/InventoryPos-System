@@ -1,0 +1,39 @@
+<div class="card">
+  <div class="card-header">
+    <h5 class="mb-0">Sales</h5>
+  </div>
+  <div class="card-body">
+    <p class="text-muted">
+      Sales are recorded from the WinForms point-of-sale app. This page is a read-only report.
+    </p>
+    <div class="accordion" *ngIf="orders.items.length > 0; else noOrders">
+      <div class="accordion-item" *ngFor="let order of orders.items">
+        <h2 class="accordion-header d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+          <span>{{ order.creationTime | date: 'short' }}</span>
+          <strong>{{ order.totalAmount | currency }}</strong>
+        </h2>
+        <div class="p-3">
+          <table class="table table-sm mb-0">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of order.items">
+                <td>{{ productName(item.productId) }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.unitPrice | currency }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <ng-template #noOrders>
+      <div class="text-center text-muted">No sales yet.</div>
+    </ng-template>
+  </div>
+</div>

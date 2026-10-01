@@ -1,0 +1,17 @@
+# .NET
+bin/
+obj/
+*.user
+
+# Angular / Node
+node_modules/
+dist/
+.angular/
+
+# Logs
+*.log
+
+# OS / editor
+.vs/
+.vscode/
+*.swp

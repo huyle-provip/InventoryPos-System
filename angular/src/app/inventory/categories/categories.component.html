@@ -1,0 +1,60 @@
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Categories</h5>
+    <button class="btn btn-primary" type="button" (click)="openCreate()">+ New Category</button>
+  </div>
+  <div class="card-body">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th style="width: 160px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let category of categories.items">
+          <td>{{ category.name }}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-secondary me-1" type="button" (click)="openEdit(category)">Edit</button>
+            <button class="btn btn-sm btn-outline-danger" type="button" (click)="delete(category)">Delete</button>
+          </td>
+        </tr>
+        <tr *ngIf="categories.items.length === 0">
+          <td colspan="2" class="text-center text-muted">No categories yet.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isModalOpen">
+  <ng-template #abpHeader>
+    <h4>{{ editingId ? 'Edit Category' : 'New Category' }}</h4>
+  </ng-template>
+  <ng-template #abpBody>
+    <form (ngSubmit)="save()" #categoryForm="ngForm">
+      <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input
+          class="form-control"
+          name="name"
+          required
+          [(ngModel)]="form.name"
+          #name="ngModel"
+        />
+        <div class="text-danger small" *ngIf="name.invalid && name.touched">Name is required.</div>
+      </div>
+    </form>
+  </ng-template>
+  <ng-template #abpFooter>
+    <button class="btn btn-secondary" type="button" (click)="isModalOpen = false">Cancel</button>
+    <button
+      class="btn btn-primary"
+      type="button"
+      [disabled]="!form.name || isSaving"
+      (click)="save()"
+    >
+      Save
+    </button>
+  </ng-template>
+</abp-modal>

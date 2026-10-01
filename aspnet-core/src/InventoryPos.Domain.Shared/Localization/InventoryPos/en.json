@@ -1,0 +1,23 @@
+{
+  "culture": "en",
+  "texts": {
+    "AppName": "InventoryPos",
+    "Menu:Home": "Home",
+    "Welcome": "Welcome",
+    "LongWelcomeMessage": "Welcome to the application. This is a startup project based on the ABP framework. For more information, visit abp.io.",
+    "Permission:InventoryPos": "Inventory & POS",
+    "Permission:Categories": "Categories",
+    "Permission:Products": "Products",
+    "Permission:StockTransactions": "Stock Transactions",
+    "Permission:SaleOrders": "Sale Orders",
+    "Permission:Create": "Create",
+    "Permission:Edit": "Edit",
+    "Permission:Delete": "Delete",
+    "Menu:Catalog": "Catalog",
+    "Menu:Categories": "Categories",
+    "Menu:Products": "Products",
+    "Menu:Stocks": "Stocks",
+    "Menu:StockTransactions": "Stock Transactions",
+    "Menu:SaleOrders": "Sale Orders"
+  }
+}

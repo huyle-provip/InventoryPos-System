@@ -1,0 +1,75 @@
+<div class="card mb-4">
+  <div class="card-header">
+    <h5 class="mb-0">Record Stock In / Out</h5>
+  </div>
+  <div class="card-body">
+    <form (ngSubmit)="submit()" #stockForm="ngForm">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label">Product</label>
+          <select class="form-select" name="productId" required [(ngModel)]="form.productId">
+            <option [ngValue]="''" disabled>Select a product</option>
+            <option *ngFor="let product of products" [ngValue]="product.id">
+              {{ product.name }} ({{ product.quantityOnHand }} on hand)
+            </option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Type</label>
+          <select class="form-select" name="type" [(ngModel)]="form.type">
+            <option [ngValue]="StockTransactionType.In">Stock In</option>
+            <option [ngValue]="StockTransactionType.Out">Stock Out</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Quantity</label>
+          <input class="form-control" type="number" min="1" name="quantity" required [(ngModel)]="form.quantity" />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Note</label>
+          <input class="form-control" name="note" [(ngModel)]="form.note" />
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-primary w-100" type="submit" [disabled]="stockForm.invalid || isSaving">
+            Submit
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h5 class="mb-0">Stock Transaction History</h5>
+  </div>
+  <div class="card-body">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Product</th>
+          <th>Type</th>
+          <th>Quantity</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let tx of transactions.items">
+          <td>{{ tx.creationTime | date: 'short' }}</td>
+          <td>{{ productName(tx.productId) }}</td>
+          <td>
+            <span class="badge" [ngClass]="tx.type === StockTransactionType.In ? 'bg-success' : 'bg-warning'">
+              {{ tx.type === StockTransactionType.In ? 'In' : 'Out' }}
+            </span>
+          </td>
+          <td>{{ tx.quantity }}</td>
+          <td>{{ tx.note }}</td>
+        </tr>
+        <tr *ngIf="transactions.items.length === 0">
+          <td colspan="5" class="text-center text-muted">No stock transactions yet.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

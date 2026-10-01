@@ -1,0 +1,107 @@
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Products</h5>
+    <button class="btn btn-primary" type="button" (click)="openCreate()">+ New Product</button>
+  </div>
+  <div class="card-body">
+    <div class="row mb-3 g-2 align-items-center">
+      <div class="col-auto">
+        <input
+          class="form-control"
+          placeholder="Search by name or SKU"
+          [(ngModel)]="filterText"
+          (ngModelChange)="applyFilters()"
+        />
+      </div>
+      <div class="col-auto form-check">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          id="lowStockOnly"
+          [(ngModel)]="lowStockOnly"
+          (ngModelChange)="applyFilters()"
+        />
+        <label class="form-check-label" for="lowStockOnly">Low stock only</label>
+      </div>
+    </div>
+
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>SKU</th>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>On Hand</th>
+          <th>Reorder At</th>
+          <th style="width: 160px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let product of products.items">
+          <td>{{ product.sku }}</td>
+          <td>{{ product.name }}</td>
+          <td>{{ categoryName(product.categoryId) }}</td>
+          <td>{{ product.price | currency }}</td>
+          <td>
+            {{ product.quantityOnHand }}
+            <span class="badge bg-danger ms-1" *ngIf="product.isLowStock">Low</span>
+          </td>
+          <td>{{ product.reorderThreshold }}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-secondary me-1" type="button" (click)="openEdit(product)">Edit</button>
+            <button class="btn btn-sm btn-outline-danger" type="button" (click)="delete(product)">Delete</button>
+          </td>
+        </tr>
+        <tr *ngIf="products.items.length === 0">
+          <td colspan="7" class="text-center text-muted">No products yet.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isModalOpen">
+  <ng-template #abpHeader>
+    <h4>{{ editingId ? 'Edit Product' : 'New Product' }}</h4>
+  </ng-template>
+  <ng-template #abpBody>
+    <form #productForm="ngForm">
+      <div class="mb-3">
+        <label class="form-label">SKU</label>
+        <input class="form-control" name="sku" required [(ngModel)]="form.sku" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input class="form-control" name="name" required [(ngModel)]="form.name" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Category</label>
+        <select class="form-select" name="categoryId" [(ngModel)]="form.categoryId">
+          <option [ngValue]="undefined">-</option>
+          <option *ngFor="let category of categories" [ngValue]="category.id">{{ category.name }}</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Price</label>
+        <input class="form-control" type="number" min="0" step="0.01" name="price" [(ngModel)]="form.price" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Reorder Threshold</label>
+        <input class="form-control" type="number" min="0" name="reorderThreshold" [(ngModel)]="form.reorderThreshold" />
+        <div class="form-text">Stock is managed separately from the Stock page. New products start at 0 on hand.</div>
+      </div>
+    </form>
+  </ng-template>
+  <ng-template #abpFooter>
+    <button class="btn btn-secondary" type="button" (click)="isModalOpen = false">Cancel</button>
+    <button
+      class="btn btn-primary"
+      type="button"
+      [disabled]="!form.sku || !form.name || isSaving"
+      (click)="save()"
+    >
+      Save
+    </button>
+  </ng-template>
+</abp-modal>
