@@ -57,7 +57,22 @@ npm install
 npx ng serve
 ```
 
-Open `http://localhost:4200`, log in with `admin` / `1q2w3E*`. The home page is a **Dashboard** (today's sales, product count, low-stock count, inventory value, 7-day sales chart, top sellers, low-stock list), served by one backend call (`GET /api/app/dashboard`). The **Catalog** menu has Categories, Products, Stock Transactions, and Sale Orders; Products, Stock Transactions and Sale Orders each have an **Export CSV** button.
+Open `http://localhost:4200`, log in with `admin` / `1q2w3E*`. The home page is a **Dashboard** (today's sales, product count, low-stock count, inventory value, 7-day sales chart, top sellers, low-stock list), served by one backend call (`GET /api/app/dashboard`). The **Catalog** menu has Categories, Products, Stock Transactions, and Sale Orders; Products, Stock Transactions and Sale Orders each have an **Export CSV** button. The **Purchasing** menu has Suppliers and Purchase Orders.
+
+- **Product photos:** edit a product to attach a PNG/JPEG (up to 1 MB). Photos are stored in the database (separate `AppProductImages` table, so list queries stay light) and served by `GET /api/app/product-image/{id}`, which is anonymous so a plain `<img>` can load it (ids are unguessable GUIDs).
+- **Barcode labels:** the **Label** button (one product) and **Print Labels** (everything in the current filter) open a print sheet with a Code 128 barcode of the SKU. The encoder is hand-written in `angular/src/app/shared/code128.ts` and was checked against the JsBarcode library.
+- **Refunds:** on **Sale Orders**, **Refund** takes back whole units. Stock is restored (with an audit stock transaction), each unit refunds its proportional share of the sale's discount and tax, and the dashboard nets refunds out of the day they were issued.
+- **Purchase orders:** create a supplier, then a purchase order. Stock is received against the order in the VB.NET app.
+
+### Tax rate
+
+The tax rate (default 10%) is applied server-side to every sale after discount. Change it in `aspnet-core/src/InventoryPos.HttpApi.Host/appsettings.json`:
+
+```json
+"Settings": { "InventoryPos.TaxRatePercent": "10" }
+```
+
+Restart the API after changing it. Existing sales keep the rate they were charged.
 
 If the backend's client-side libs (`wwwroot/libs`) are ever missing (500 errors on every page), regenerate them from `aspnet-core/src/InventoryPos.HttpApi.Host`:
 
@@ -73,7 +88,7 @@ cd pos-winforms/InventoryPos.Pos
 dotnet run
 ```
 
-Log in (`cashier` / `1q2w3E*` or `admin`), then either pick a product and set a quantity, or type/scan a SKU into the quick-entry box and press Enter. **F2** focuses the SKU box, **F3** the search box, **F9** checks out. Checkout opens a print-preview receipt you can print.
+Log in (`cashier` / `1q2w3E*` or `admin`), then either pick a product and set a quantity, or type/scan a SKU into the quick-entry box and press Enter. **F2** focuses the SKU box, **F3** the search box, **F9** checks out. Pick a **discount** (percent or amount) and a **payment method** (cash with change calculation, or card); the totals update live and match what the server charges. Selecting a product shows its photo. Checkout opens a print-preview receipt (subtotal, discount, tax, total, payment, change) you can print.
 
 ### 4. VB.NET Warehouse app
 
@@ -82,7 +97,7 @@ cd warehouse-vb/InventoryPos.Warehouse
 dotnet run
 ```
 
-Log in (`warehouse` / `1q2w3E*` or `admin`), select a product, choose **Stock In** or **Stock Out**, enter a quantity, and **Submit**. Low-stock rows are tinted red (out-of-stock rows are solid red), a banner counts them, and **Low stock only** filters the list.
+Log in (`warehouse` / `1q2w3E*` or `admin`), select a product, choose **Stock In** or **Stock Out**, enter a quantity, and **Submit**. Low-stock rows are tinted red (out-of-stock rows are solid red), a banner counts them, and **Low stock only** filters the list. **Receive Purchase Order...** lists open purchase orders; enter what actually arrived per line (partial deliveries keep the order open) and the items go into stock, with a stock transaction recorded against the order number.
 
 ## Roles
 
@@ -90,9 +105,9 @@ Log in (`warehouse` / `1q2w3E*` or `admin`), select a product, choose **Stock In
 
 | User | Role | Can do |
 |---|---|---|
-| `admin` | admin | Everything |
+| `admin` | admin | Everything, including refunds, suppliers, creating/cancelling purchase orders, product photos |
 | `cashier` | Cashier | View products/categories, create and view sales |
-| `warehouse` | Warehouse | View products/categories, record and view stock transactions |
+| `warehouse` | Warehouse | View products/categories, record and view stock transactions, view suppliers and purchase orders, receive purchase orders |
 
 The Angular menu hides pages a role can't use, and the API enforces the same permissions server-side. Manage roles under **Administration > Identity Management**. After pulling this change, re-run `DbMigrator` once to create the roles and users.
 

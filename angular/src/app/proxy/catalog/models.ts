@@ -29,5 +29,6 @@ export interface ProductDto extends AuditedEntityDto<string> {
   price: number;
   quantityOnHand: number;
   reorderThreshold: number;
+  hasImage: boolean;
   isLowStock: boolean;
 }

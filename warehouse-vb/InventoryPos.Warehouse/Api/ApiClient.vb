@@ -89,6 +89,38 @@ Namespace Api
             Return Await PostAsync(Of CreateStockTransactionDto, StockTransactionDto)("/api/app/stock-transaction", input)
         End Function
 
+        Public Async Function GetReceivablePurchaseOrdersAsync() As Task(Of PagedResult(Of PurchaseOrderDto))
+            Return Await GetAsync(Of PagedResult(Of PurchaseOrderDto))("/api/app/purchase-order?receivableOnly=true&maxResultCount=100")
+        End Function
+
+        Public Async Function ReceivePurchaseOrderAsync(orderId As String, input As ReceivePurchaseOrderDto) As Task(Of PurchaseOrderDto)
+            Return Await PostAsync(Of ReceivePurchaseOrderDto, PurchaseOrderDto)($"/api/app/purchase-order/{orderId}/receive", input)
+        End Function
+
+        ' Returns Nothing when the product has no image (or it cannot be loaded) so the UI can simply show nothing.
+        Public Async Function GetProductImageAsync(productId As String) As Task(Of Image)
+            Try
+                Using response = Await _httpClient.GetAsync($"/api/app/product-image/{productId}")
+                    If Not response.IsSuccessStatusCode Then
+                        Return Nothing
+                    End If
+
+                    Dim bytes = Await response.Content.ReadAsByteArrayAsync()
+                    Using stream As New IO.MemoryStream(bytes)
+                        Using original = Image.FromStream(stream)
+                            Return New Bitmap(original)
+                        End Using
+                    End Using
+                End Using
+            Catch ex As HttpRequestException
+                Return Nothing
+            Catch ex As ArgumentException
+                Return Nothing
+            Catch ex As OutOfMemoryException
+                Return Nothing
+            End Try
+        End Function
+
         Private Async Function GetAsync(Of T)(url As String) As Task(Of T)
             Using response = Await _httpClient.GetAsync(url)
                 Dim body = Await response.Content.ReadAsStringAsync()

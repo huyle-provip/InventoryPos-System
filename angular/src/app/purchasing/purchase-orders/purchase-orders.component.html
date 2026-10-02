@@ -1,0 +1,126 @@
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Purchase Orders</h5>
+    <button
+      *abpPermission="'InventoryPos.PurchaseOrders.Create'"
+      class="btn btn-primary"
+      type="button"
+      (click)="openCreate()"
+    >
+      + New Purchase Order
+    </button>
+  </div>
+  <div class="card-body">
+    <p class="text-muted">
+      Stock is received against an order in the Warehouse (VB.NET) app, which adds the items to stock and records the movement.
+    </p>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Order</th>
+          <th>Date</th>
+          <th>Supplier</th>
+          <th>Status</th>
+          <th>Received</th>
+          <th class="text-end">Total cost</th>
+          <th style="width: 190px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let order of orders.items">
+          <tr>
+            <td>{{ order.orderNumber }}</td>
+            <td>{{ order.creationTime | date: 'short' }}</td>
+            <td>{{ order.supplierName }}</td>
+            <td><span class="badge" [ngClass]="statusClass(order.status)">{{ statusLabel(order.status) }}</span></td>
+            <td>{{ receivedSummary(order) }}</td>
+            <td class="text-end">{{ order.totalCost | currency }}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-secondary me-1" type="button" (click)="toggle(order)">
+                {{ expandedId === order.id ? 'Hide' : 'Details' }}
+              </button>
+              <ng-container *ngIf="order.status === PurchaseOrderStatus.Open">
+                <button
+                  *abpPermission="'InventoryPos.PurchaseOrders.Cancel'"
+                  class="btn btn-sm btn-outline-danger"
+                  type="button"
+                  (click)="cancel(order)"
+                >
+                  Cancel
+                </button>
+              </ng-container>
+            </td>
+          </tr>
+          <tr *ngIf="expandedId === order.id">
+            <td colspan="7">
+              <div class="text-muted small mb-1" *ngIf="order.note">Note: {{ order.note }}</div>
+              <table class="table table-sm mb-0">
+                <thead>
+                  <tr><th>SKU</th><th>Product</th><th>Ordered</th><th>Received</th><th>Unit cost</th></tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of order.items">
+                    <td>{{ item.sku }}</td>
+                    <td>{{ item.productName }}</td>
+                    <td>{{ item.quantityOrdered }}</td>
+                    <td>{{ item.quantityReceived }}</td>
+                    <td>{{ item.unitCost | currency }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        </ng-container>
+        <tr *ngIf="orders.items.length === 0">
+          <td colspan="7" class="text-center text-muted">No purchase orders yet.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isModalOpen" [options]="{ size: 'lg' }">
+  <ng-template #abpHeader>
+    <h4>New Purchase Order</h4>
+  </ng-template>
+  <ng-template #abpBody>
+    <div class="mb-3">
+      <label class="form-label">Supplier</label>
+      <select class="form-select" name="supplierId" [(ngModel)]="supplierId">
+        <option value="" disabled>Select a supplier</option>
+        <option *ngFor="let supplier of suppliers" [value]="supplier.id">{{ supplier.name }}</option>
+      </select>
+      <div class="form-text text-danger" *ngIf="suppliers.length === 0">Create a supplier first.</div>
+    </div>
+
+    <label class="form-label">Items</label>
+    <div class="row g-2 mb-2 align-items-center" *ngFor="let line of lines; let i = index">
+      <div class="col-6">
+        <select class="form-select" [name]="'product-' + i" [(ngModel)]="line.productId">
+          <option value="" disabled>Select a product</option>
+          <option *ngFor="let product of products" [value]="product.id">{{ product.sku }} - {{ product.name }}</option>
+        </select>
+      </div>
+      <div class="col-2">
+        <input class="form-control" type="number" min="1" [name]="'qty-' + i" placeholder="Qty" [(ngModel)]="line.quantity" />
+      </div>
+      <div class="col-3">
+        <input class="form-control" type="number" min="0" step="0.01" [name]="'cost-' + i" placeholder="Unit cost" [(ngModel)]="line.unitCost" />
+      </div>
+      <div class="col-1">
+        <button class="btn btn-sm btn-outline-danger" type="button" [disabled]="lines.length === 1" (click)="removeLine(i)">x</button>
+      </div>
+    </div>
+    <button class="btn btn-sm btn-outline-secondary mb-3" type="button" (click)="addLine()">+ Add item</button>
+
+    <div class="mb-3">
+      <label class="form-label">Note (optional)</label>
+      <input class="form-control" name="note" maxlength="512" [(ngModel)]="note" />
+    </div>
+    <div class="fw-bold">Total cost: {{ total | currency }}</div>
+  </ng-template>
+  <ng-template #abpFooter>
+    <button class="btn btn-secondary" type="button" (click)="isModalOpen = false">Cancel</button>
+    <button class="btn btn-primary" type="button" [disabled]="!canSave || isSaving" (click)="save()">Create order</button>
+  </ng-template>
+</abp-modal>

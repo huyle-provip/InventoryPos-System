@@ -16,4 +16,6 @@ public class Product : AuditedAggregateRoot<Guid>
     public int QuantityOnHand { get; set; }
 
     public int ReorderThreshold { get; set; }
+
+    public bool HasImage { get; set; }
 }

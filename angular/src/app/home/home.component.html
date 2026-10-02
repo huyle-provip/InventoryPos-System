@@ -23,7 +23,12 @@
       <div class="card-body">
         <div class="text-muted small">Today's Sales</div>
         <div class="fs-3 fw-bold">{{ dashboard.todaySalesTotal | currency }}</div>
-        <div class="text-muted small">{{ dashboard.todayOrderCount }} order(s)</div>
+        <div class="text-muted small">
+          {{ dashboard.todayOrderCount }} order(s)
+          @if (dashboard.todayRefundTotal > 0) {
+          <span class="text-danger">&middot; {{ dashboard.todayRefundTotal | currency }} refunded</span>
+          }
+        </div>
       </div>
     </div>
   </div>
@@ -32,7 +37,12 @@
       <div class="card-body">
         <div class="text-muted small">Products</div>
         <div class="fs-3 fw-bold">{{ dashboard.totalProducts }}</div>
-        <div class="text-muted small">in the catalog</div>
+        <div class="text-muted small">
+          in the catalog
+          @if (dashboard.openPurchaseOrderCount > 0) {
+          <a routerLink="/purchasing/purchase-orders">&middot; {{ dashboard.openPurchaseOrderCount }} open PO(s)</a>
+          }
+        </div>
       </div>
     </div>
   </div>

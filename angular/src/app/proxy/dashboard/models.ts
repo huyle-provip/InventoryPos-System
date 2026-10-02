@@ -8,6 +8,8 @@ export interface DailySalesDto {
 export interface DashboardDto {
   todaySalesTotal: number;
   todayOrderCount: number;
+  todayRefundTotal: number;
+  openPurchaseOrderCount: number;
   totalProducts: number;
   lowStockCount: number;
   inventoryValue: number;

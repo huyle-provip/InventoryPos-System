@@ -76,6 +76,9 @@ public class InventoryPosRoleDataSeedContributor : IDataSeedContributor, ITransi
                 InventoryPosPermissions.Categories.Default,
                 InventoryPosPermissions.StockTransactions.Default,
                 InventoryPosPermissions.StockTransactions.Create,
+                InventoryPosPermissions.Suppliers.Default,
+                InventoryPosPermissions.PurchaseOrders.Default,
+                InventoryPosPermissions.PurchaseOrders.Receive,
             });
     }
 

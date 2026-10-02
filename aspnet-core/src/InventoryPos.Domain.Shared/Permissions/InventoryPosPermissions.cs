@@ -31,4 +31,26 @@ public static class InventoryPosPermissions
         public const string Default = GroupName + ".SaleOrders";
         public const string Create = Default + ".Create";
     }
+
+    public static class SaleReturns
+    {
+        public const string Default = GroupName + ".SaleReturns";
+        public const string Create = Default + ".Create";
+    }
+
+    public static class Suppliers
+    {
+        public const string Default = GroupName + ".Suppliers";
+        public const string Create = Default + ".Create";
+        public const string Edit = Default + ".Edit";
+        public const string Delete = Default + ".Delete";
+    }
+
+    public static class PurchaseOrders
+    {
+        public const string Default = GroupName + ".PurchaseOrders";
+        public const string Create = Default + ".Create";
+        public const string Receive = Default + ".Receive";
+        public const string Cancel = Default + ".Cancel";
+    }
 }

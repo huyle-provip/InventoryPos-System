@@ -17,5 +17,7 @@ public class ProductDto : AuditedEntityDto<Guid>
 
     public int ReorderThreshold { get; set; }
 
+    public bool HasImage { get; set; }
+
     public bool IsLowStock => QuantityOnHand <= ReorderThreshold;
 }

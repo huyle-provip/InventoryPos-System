@@ -37,6 +37,52 @@ Namespace Api
         Public Property QuantityOnHand As Integer
         Public Property ReorderThreshold As Integer
         Public Property IsLowStock As Boolean
+        Public Property HasImage As Boolean
+    End Class
+
+    Public Enum PurchaseOrderStatus
+        Open = 1
+        PartiallyReceived = 2
+        Received = 3
+        Cancelled = 4
+    End Enum
+
+    Public Class PurchaseOrderItemDto
+        Public Property Id As String = String.Empty
+        Public Property ProductId As String = String.Empty
+        Public Property ProductName As String = String.Empty
+        Public Property Sku As String = String.Empty
+        Public Property QuantityOrdered As Integer
+        Public Property QuantityReceived As Integer
+        Public Property QuantityOutstanding As Integer
+        Public Property UnitCost As Decimal
+    End Class
+
+    Public Class PurchaseOrderDto
+        Public Property Id As String = String.Empty
+        Public Property OrderNumber As String = String.Empty
+        Public Property SupplierName As String = String.Empty
+        Public Property Status As PurchaseOrderStatus
+        Public Property Note As String
+        Public Property TotalCost As Decimal
+        Public Property Items As List(Of PurchaseOrderItemDto) = New List(Of PurchaseOrderItemDto)()
+
+        Public ReadOnly Property Display As String
+            Get
+                Dim received = Items.Sum(Function(i) i.QuantityReceived)
+                Dim ordered = Items.Sum(Function(i) i.QuantityOrdered)
+                Return $"{OrderNumber}  |  {SupplierName}  |  {Status}  |  received {received}/{ordered}"
+            End Get
+        End Property
+    End Class
+
+    Public Class ReceivePurchaseOrderItemDto
+        Public Property PurchaseOrderItemId As String = String.Empty
+        Public Property Quantity As Integer
+    End Class
+
+    Public Class ReceivePurchaseOrderDto
+        Public Property Items As List(Of ReceivePurchaseOrderItemDto) = New List(Of ReceivePurchaseOrderItemDto)()
     End Class
 
     Public Enum StockTransactionType

@@ -1,0 +1,85 @@
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Suppliers</h5>
+    <button
+      *abpPermission="'InventoryPos.Suppliers.Create'"
+      class="btn btn-primary"
+      type="button"
+      (click)="openCreate()"
+    >
+      + New Supplier
+    </button>
+  </div>
+  <div class="card-body">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Contact</th>
+          <th>Phone</th>
+          <th>Email</th>
+          <th style="width: 160px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let supplier of suppliers.items">
+          <td>{{ supplier.name }}</td>
+          <td>{{ supplier.contactName }}</td>
+          <td>{{ supplier.phone }}</td>
+          <td>{{ supplier.email }}</td>
+          <td>
+            <button
+              *abpPermission="'InventoryPos.Suppliers.Edit'"
+              class="btn btn-sm btn-outline-secondary me-1"
+              type="button"
+              (click)="openEdit(supplier)"
+            >
+              Edit
+            </button>
+            <button
+              *abpPermission="'InventoryPos.Suppliers.Delete'"
+              class="btn btn-sm btn-outline-danger"
+              type="button"
+              (click)="delete(supplier)"
+            >
+              Delete
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="suppliers.items.length === 0">
+          <td colspan="5" class="text-center text-muted">No suppliers yet.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isModalOpen">
+  <ng-template #abpHeader>
+    <h4>{{ editingId ? 'Edit Supplier' : 'New Supplier' }}</h4>
+  </ng-template>
+  <ng-template #abpBody>
+    <form #supplierForm="ngForm">
+      <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input class="form-control" name="name" required maxlength="128" [(ngModel)]="form.name" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Contact name</label>
+        <input class="form-control" name="contactName" maxlength="128" [(ngModel)]="form.contactName" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Phone</label>
+        <input class="form-control" name="phone" maxlength="32" [(ngModel)]="form.phone" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input class="form-control" type="email" name="email" maxlength="256" [(ngModel)]="form.email" />
+      </div>
+    </form>
+  </ng-template>
+  <ng-template #abpFooter>
+    <button class="btn btn-secondary" type="button" (click)="isModalOpen = false">Cancel</button>
+    <button class="btn btn-primary" type="button" [disabled]="!form.name || isSaving" (click)="save()">Save</button>
+  </ng-template>
+</abp-modal>

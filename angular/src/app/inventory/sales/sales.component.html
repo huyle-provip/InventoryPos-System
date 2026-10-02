@@ -5,36 +5,118 @@
   </div>
   <div class="card-body">
     <p class="text-muted">
-      Sales are recorded from the WinForms point-of-sale app. This page is a read-only report.
+      Sales are recorded from the WinForms point-of-sale app. Refunds return items to stock and reduce the dashboard totals.
     </p>
-    <div class="accordion" *ngIf="orders.items.length > 0; else noOrders">
-      <div class="accordion-item" *ngFor="let order of orders.items">
-        <h2 class="accordion-header d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
-          <span>{{ order.creationTime | date: 'short' }}</span>
-          <strong>{{ order.totalAmount | currency }}</strong>
-        </h2>
-        <div class="p-3">
-          <table class="table table-sm mb-0">
+
+    <ng-container *ngIf="orders.items.length > 0; else noOrders">
+      <div class="card mb-3" *ngFor="let order of orders.items">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <div>
+            <strong>{{ order.creationTime | date: 'short' }}</strong>
+            <span class="badge bg-secondary ms-2">{{ order.paymentMethod === PaymentMethod.Card ? 'Card' : 'Cash' }}</span>
+            <span class="badge bg-warning text-dark ms-1" *ngIf="order.refundedAmount > 0">
+              Refunded {{ order.refundedAmount | currency }}
+            </span>
+          </div>
+          <div class="d-flex align-items-center gap-3">
+            <span class="fs-5 fw-bold">{{ order.totalAmount | currency }}</span>
+            <button
+              *abpPermission="'InventoryPos.SaleReturns.Create'"
+              class="btn btn-sm btn-outline-danger"
+              type="button"
+              [disabled]="!canRefund(order)"
+              (click)="openRefund(order)"
+            >
+              Refund
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <table class="table table-sm mb-3">
             <thead>
               <tr>
                 <th>Product</th>
                 <th>Quantity</th>
+                <th>Returned</th>
                 <th>Unit Price</th>
+                <th class="text-end">Line Total</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let item of order.items">
                 <td>{{ productName(item.productId) }}</td>
                 <td>{{ item.quantity }}</td>
+                <td>{{ item.returnedQuantity || '-' }}</td>
                 <td>{{ item.unitPrice | currency }}</td>
+                <td class="text-end">{{ item.quantity * item.unitPrice | currency }}</td>
               </tr>
             </tbody>
           </table>
+          <div class="ms-auto" style="max-width: 280px">
+            <div class="d-flex justify-content-between"><span>Subtotal</span><span>{{ order.subtotal | currency }}</span></div>
+            <div class="d-flex justify-content-between" *ngIf="order.discountAmount > 0">
+              <span>{{ discountLabel(order) }}</span><span>-{{ order.discountAmount | currency }}</span>
+            </div>
+            <div class="d-flex justify-content-between" *ngIf="order.taxAmount > 0">
+              <span>Tax ({{ order.taxRatePercent }}%)</span><span>{{ order.taxAmount | currency }}</span>
+            </div>
+            <div class="d-flex justify-content-between fw-bold border-top mt-1 pt-1">
+              <span>Total</span><span>{{ order.totalAmount | currency }}</span>
+            </div>
+            <div class="d-flex justify-content-between text-muted" *ngIf="order.paymentMethod === PaymentMethod.Cash && order.changeGiven > 0">
+              <span>Tendered / change</span><span>{{ order.amountTendered | currency }} / {{ order.changeGiven | currency }}</span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </ng-container>
     <ng-template #noOrders>
       <div class="text-center text-muted">No sales yet.</div>
     </ng-template>
   </div>
 </div>
+
+<abp-modal [(visible)]="isRefundOpen">
+  <ng-template #abpHeader>
+    <h4>Refund sale</h4>
+  </ng-template>
+  <ng-template #abpBody>
+    <div *ngIf="refundOrder">
+      <p class="text-muted">Choose how many units to take back. They go straight back into stock.</p>
+      <table class="table table-sm">
+        <thead>
+          <tr><th>Product</th><th>Sold</th><th>Returnable</th><th style="width: 110px">Return</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of refundOrder.items">
+            <td>{{ productName(item.productId) }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ returnable(item) }}</td>
+            <td>
+              <input
+                class="form-control form-control-sm"
+                type="number"
+                min="0"
+                [max]="returnable(item)"
+                [disabled]="returnable(item) === 0"
+                [name]="'qty-' + item.id"
+                [(ngModel)]="refundQuantities[item.id!]"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="mb-3">
+        <label class="form-label">Reason (optional)</label>
+        <input class="form-control" name="refundReason" maxlength="512" [(ngModel)]="refundReason" />
+      </div>
+      <div class="fw-bold">Estimated refund: {{ estimatedRefund | currency }}</div>
+    </div>
+  </ng-template>
+  <ng-template #abpFooter>
+    <button class="btn btn-secondary" type="button" (click)="isRefundOpen = false">Cancel</button>
+    <button class="btn btn-danger" type="button" [disabled]="!hasRefundSelection || isRefunding" (click)="submitRefund()">
+      Refund
+    </button>
+  </ng-template>
+</abp-modal>

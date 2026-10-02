@@ -2,6 +2,7 @@
   <div class="card-header d-flex justify-content-between align-items-center">
     <h5 class="mb-0">Products</h5>
     <div>
+      <button class="btn btn-outline-secondary me-2" type="button" (click)="printAllLabels()">Print Labels</button>
       <button class="btn btn-outline-secondary me-2" type="button" (click)="exportCsv()">Export CSV</button>
       <button class="btn btn-primary" type="button" (click)="openCreate()">+ New Product</button>
     </div>
@@ -31,17 +32,28 @@
     <table class="table table-striped">
       <thead>
         <tr>
+          <th style="width: 56px;"></th>
           <th>SKU</th>
           <th>Name</th>
           <th>Category</th>
           <th>Price</th>
           <th>On Hand</th>
           <th>Reorder At</th>
-          <th style="width: 160px;">Actions</th>
+          <th style="width: 220px;">Actions</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let product of products.items">
+          <td>
+            <img
+              *ngIf="product.hasImage"
+              [src]="imageUrl(product)"
+              [alt]="product.name"
+              width="40"
+              height="40"
+              style="object-fit: cover; border-radius: 4px"
+            />
+          </td>
           <td>{{ product.sku }}</td>
           <td>{{ product.name }}</td>
           <td>{{ categoryName(product.categoryId) }}</td>
@@ -52,12 +64,13 @@
           </td>
           <td>{{ product.reorderThreshold }}</td>
           <td>
+            <button class="btn btn-sm btn-outline-secondary me-1" type="button" (click)="printLabel(product)">Label</button>
             <button class="btn btn-sm btn-outline-secondary me-1" type="button" (click)="openEdit(product)">Edit</button>
             <button class="btn btn-sm btn-outline-danger" type="button" (click)="delete(product)">Delete</button>
           </td>
         </tr>
         <tr *ngIf="products.items.length === 0">
-          <td colspan="7" class="text-center text-muted">No products yet.</td>
+          <td colspan="8" class="text-center text-muted">No products yet.</td>
         </tr>
       </tbody>
     </table>
@@ -93,6 +106,26 @@
         <label class="form-label">Reorder Threshold</label>
         <input class="form-control" type="number" min="0" name="reorderThreshold" [(ngModel)]="form.reorderThreshold" />
         <div class="form-text">Stock is managed separately from the Stock page. New products start at 0 on hand.</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Photo</label>
+        <div class="d-flex align-items-center gap-3">
+          <ng-container *ngIf="pendingImagePreview || (editingProduct?.hasImage && !removeImage); else noPhoto">
+            <img
+              [src]="pendingImagePreview || imageUrl(editingProduct!)"
+              alt="Product photo"
+              width="72"
+              height="72"
+              style="object-fit: cover; border-radius: 6px"
+            />
+            <button class="btn btn-sm btn-outline-danger" type="button" (click)="clearImage()">Remove</button>
+          </ng-container>
+          <ng-template #noPhoto>
+            <span class="text-muted">No photo</span>
+          </ng-template>
+          <input type="file" class="form-control form-control-sm" accept="image/png,image/jpeg" (change)="onImageSelected($event)" />
+        </div>
+        <div class="form-text">PNG or JPEG, up to 1 MB. Applied when you save.</div>
       </div>
     </form>
   </ng-template>

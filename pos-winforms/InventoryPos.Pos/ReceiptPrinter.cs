@@ -57,7 +57,32 @@ public static class ReceiptPrinter
         }
 
         sb.AppendLine(divider);
+        sb.AppendLine(Row("Subtotal", order.Subtotal.ToString("C2")));
+
+        if (order.DiscountAmount > 0)
+        {
+            var label = order.DiscountType == DiscountType.Percent ? $"Discount ({order.DiscountValue:0.##}%)" : "Discount";
+            sb.AppendLine(Row(label, (-order.DiscountAmount).ToString("C2")));
+        }
+
+        if (order.TaxAmount > 0)
+        {
+            sb.AppendLine(Row($"Tax ({order.TaxRatePercent:0.##}%)", order.TaxAmount.ToString("C2")));
+        }
+
         sb.AppendLine(Row("TOTAL", order.TotalAmount.ToString("C2")));
+        sb.AppendLine(divider);
+
+        if (order.PaymentMethod == PaymentMethod.Card)
+        {
+            sb.AppendLine(Row("Paid by card", order.TotalAmount.ToString("C2")));
+        }
+        else
+        {
+            sb.AppendLine(Row("Cash received", order.AmountTendered.ToString("C2")));
+            sb.AppendLine(Row("Change", order.ChangeGiven.ToString("C2")));
+        }
+
         sb.AppendLine(divider);
 
         return sb.ToString();

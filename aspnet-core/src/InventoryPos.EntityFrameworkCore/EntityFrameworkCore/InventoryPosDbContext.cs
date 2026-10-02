@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using InventoryPos.Catalog;
+using InventoryPos.Purchasing;
 using InventoryPos.Sales;
 using InventoryPos.Stocks;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
@@ -32,6 +33,12 @@ public class InventoryPosDbContext :
     public DbSet<StockTransaction> StockTransactions { get; set; }
     public DbSet<SaleOrder> SaleOrders { get; set; }
     public DbSet<SaleOrderItem> SaleOrderItems { get; set; }
+    public DbSet<SaleReturn> SaleReturns { get; set; }
+    public DbSet<SaleReturnItem> SaleReturnItems { get; set; }
+    public DbSet<Supplier> Suppliers { get; set; }
+    public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
+    public DbSet<PurchaseOrderItem> PurchaseOrderItems { get; set; }
+    public DbSet<ProductImage> ProductImages { get; set; }
 
     #region Entities from the modules
 
@@ -114,7 +121,14 @@ public class InventoryPosDbContext :
         {
             b.ToTable(InventoryPosConsts.DbTablePrefix + "SaleOrders", InventoryPosConsts.DbSchema);
             b.ConfigureByConvention();
+            b.Property(x => x.Subtotal).HasColumnType("decimal(18,2)");
+            b.Property(x => x.DiscountValue).HasColumnType("decimal(18,2)");
+            b.Property(x => x.DiscountAmount).HasColumnType("decimal(18,2)");
+            b.Property(x => x.TaxRatePercent).HasColumnType("decimal(9,4)");
+            b.Property(x => x.TaxAmount).HasColumnType("decimal(18,2)");
             b.Property(x => x.TotalAmount).HasColumnType("decimal(18,2)");
+            b.Property(x => x.AmountTendered).HasColumnType("decimal(18,2)");
+            b.Property(x => x.PaymentMethod).HasDefaultValue(PaymentMethod.Cash);
             b.HasMany(x => x.Items).WithOne().HasForeignKey(x => x.SaleOrderId).OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -124,6 +138,63 @@ public class InventoryPosDbContext :
             b.ConfigureByConvention();
             b.Property(x => x.UnitPrice).HasColumnType("decimal(18,2)");
             b.HasOne<Product>().WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<SaleReturn>(b =>
+        {
+            b.ToTable(InventoryPosConsts.DbTablePrefix + "SaleReturns", InventoryPosConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Reason).HasMaxLength(512);
+            b.Property(x => x.RefundAmount).HasColumnType("decimal(18,2)");
+            b.HasOne<SaleOrder>().WithMany().HasForeignKey(x => x.SaleOrderId).OnDelete(DeleteBehavior.Restrict);
+            b.HasMany(x => x.Items).WithOne().HasForeignKey(x => x.SaleReturnId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<SaleReturnItem>(b =>
+        {
+            b.ToTable(InventoryPosConsts.DbTablePrefix + "SaleReturnItems", InventoryPosConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.RefundAmount).HasColumnType("decimal(18,2)");
+            b.HasOne<SaleOrderItem>().WithMany().HasForeignKey(x => x.SaleOrderItemId).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne<Product>().WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Supplier>(b =>
+        {
+            b.ToTable(InventoryPosConsts.DbTablePrefix + "Suppliers", InventoryPosConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.Name).IsRequired().HasMaxLength(128);
+            b.Property(x => x.ContactName).HasMaxLength(128);
+            b.Property(x => x.Phone).HasMaxLength(32);
+            b.Property(x => x.Email).HasMaxLength(256);
+        });
+
+        builder.Entity<PurchaseOrder>(b =>
+        {
+            b.ToTable(InventoryPosConsts.DbTablePrefix + "PurchaseOrders", InventoryPosConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.OrderNumber).IsRequired().HasMaxLength(32);
+            b.Property(x => x.Note).HasMaxLength(512);
+            b.Property(x => x.TotalCost).HasColumnType("decimal(18,2)");
+            b.HasIndex(x => x.OrderNumber).IsUnique();
+            b.HasOne<Supplier>().WithMany().HasForeignKey(x => x.SupplierId).OnDelete(DeleteBehavior.Restrict);
+            b.HasMany(x => x.Items).WithOne().HasForeignKey(x => x.PurchaseOrderId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<PurchaseOrderItem>(b =>
+        {
+            b.ToTable(InventoryPosConsts.DbTablePrefix + "PurchaseOrderItems", InventoryPosConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.UnitCost).HasColumnType("decimal(18,2)");
+            b.HasOne<Product>().WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<ProductImage>(b =>
+        {
+            b.ToTable(InventoryPosConsts.DbTablePrefix + "ProductImages", InventoryPosConsts.DbSchema);
+            b.Property(x => x.ContentType).IsRequired().HasMaxLength(64);
+            b.Property(x => x.Data).IsRequired();
+            b.HasOne<Product>().WithMany().HasForeignKey(x => x.Id).OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

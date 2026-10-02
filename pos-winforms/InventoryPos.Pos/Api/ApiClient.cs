@@ -75,6 +75,33 @@ public class ApiClient
         return await PostAsync<CreateSaleOrderDto, SaleOrderDto>("/api/app/sale-order", input);
     }
 
+    public async Task<PricingInfoDto> GetPricingInfoAsync()
+    {
+        return await GetAsync<PricingInfoDto>("/api/app/sale-order/pricing-info");
+    }
+
+    /// <summary>Returns null when the product has no image (or it could not be loaded) so the UI can simply show nothing.</summary>
+    public async Task<Image?> GetProductImageAsync(string productId)
+    {
+        try
+        {
+            using var response = await _httpClient.GetAsync($"/api/app/product-image/{productId}");
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            using var stream = new MemoryStream(bytes);
+            using var original = Image.FromStream(stream);
+            return new Bitmap(original);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or ArgumentException or OutOfMemoryException)
+        {
+            return null;
+        }
+    }
+
     private async Task<T> GetAsync<T>(string url)
     {
         using var response = await _httpClient.GetAsync(url);

@@ -4,6 +4,6 @@ public static class InventoryPosSettings
 {
     private const string Prefix = "InventoryPos";
 
-    //Add your own setting names here. Example:
-    //public const string MySetting1 = Prefix + ".MySetting1";
+    /// <summary>Sales tax percent applied to every sale after discount. Override in appsettings.json under "Settings".</summary>
+    public const string TaxRatePercent = Prefix + ".TaxRatePercent";
 }

@@ -25,6 +25,19 @@ public class InventoryPosPermissionDefinitionProvider : PermissionDefinitionProv
 
         var saleOrders = myGroup.AddPermission(InventoryPosPermissions.SaleOrders.Default, L("Permission:SaleOrders"));
         saleOrders.AddChild(InventoryPosPermissions.SaleOrders.Create, L("Permission:Create"));
+
+        var saleReturns = myGroup.AddPermission(InventoryPosPermissions.SaleReturns.Default, L("Permission:SaleReturns"));
+        saleReturns.AddChild(InventoryPosPermissions.SaleReturns.Create, L("Permission:Create"));
+
+        var suppliers = myGroup.AddPermission(InventoryPosPermissions.Suppliers.Default, L("Permission:Suppliers"));
+        suppliers.AddChild(InventoryPosPermissions.Suppliers.Create, L("Permission:Create"));
+        suppliers.AddChild(InventoryPosPermissions.Suppliers.Edit, L("Permission:Edit"));
+        suppliers.AddChild(InventoryPosPermissions.Suppliers.Delete, L("Permission:Delete"));
+
+        var purchaseOrders = myGroup.AddPermission(InventoryPosPermissions.PurchaseOrders.Default, L("Permission:PurchaseOrders"));
+        purchaseOrders.AddChild(InventoryPosPermissions.PurchaseOrders.Create, L("Permission:Create"));
+        purchaseOrders.AddChild(InventoryPosPermissions.PurchaseOrders.Receive, L("Permission:Receive"));
+        purchaseOrders.AddChild(InventoryPosPermissions.PurchaseOrders.Cancel, L("Permission:Cancel"));
     }
 
     private static LocalizableString L(string name)

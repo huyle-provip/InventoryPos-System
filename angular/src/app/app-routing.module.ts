@@ -12,6 +12,10 @@ const routes: Routes = [
     loadChildren: () => import('./inventory/inventory.module').then(m => m.InventoryModule),
   },
   {
+    path: 'purchasing',
+    loadChildren: () => import('./purchasing/purchasing.module').then(m => m.PurchasingModule),
+  },
+  {
     path: 'account',
     loadChildren: () => import('@abp/ng.account').then(m => m.AccountModule.forLazy()),
   },

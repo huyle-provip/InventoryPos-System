@@ -5,9 +5,14 @@ namespace InventoryPos.Dashboard;
 
 public class DashboardDto
 {
+    /// <summary>Sales charged today minus refunds issued today.</summary>
     public decimal TodaySalesTotal { get; set; }
 
     public int TodayOrderCount { get; set; }
+
+    public decimal TodayRefundTotal { get; set; }
+
+    public int OpenPurchaseOrderCount { get; set; }
 
     public int TotalProducts { get; set; }
 

@@ -33,7 +33,10 @@ Public Class MainForm
     }
 
     Private ReadOnly _logoutButton As New Button With {.Left = 890, .Top = 530, .Width = 180, .Height = 36, .Text = "Log Out"}
+    Private ReadOnly _receiveButton As New Button With {.Left = 590, .Top = 530, .Width = 270, .Height = 36, .Text = "Receive Purchase Order..."}
+    Private ReadOnly _productPicture As New PictureBox With {.Left = 930, .Top = 76, .Width = 140, .Height = 100, .BorderStyle = BorderStyle.FixedSingle, .SizeMode = PictureBoxSizeMode.Zoom}
 
+    Private ReadOnly _imageCache As New Dictionary(Of String, Image)()
     Private _selectedProduct As ProductDto
 
     Public Sub New(apiClient As ApiClient)
@@ -65,6 +68,7 @@ Public Class MainForm
         AddHandler _productsGrid.SelectionChanged, AddressOf OnProductSelectionChanged
         AddHandler _submitButton.Click, AddressOf OnSubmitClick
         AddHandler _logoutButton.Click, AddressOf OnLogoutClick
+        AddHandler _receiveButton.Click, AddressOf OnReceiveClick
 
         Controls.Add(_searchBox)
         Controls.Add(_searchButton)
@@ -80,6 +84,8 @@ Public Class MainForm
         Controls.Add(_historyLabel)
         Controls.Add(_historyGrid)
         Controls.Add(_logoutButton)
+        Controls.Add(_receiveButton)
+        Controls.Add(_productPicture)
 
         AddHandler Load, Sub() LoadProductsAsync()
     End Sub
@@ -104,6 +110,12 @@ Public Class MainForm
             _statusLabel.Text = String.Empty
             Dim result = Await _apiClient.GetProductsAsync(_searchBox.Text.Trim(), _lowStockCheck.Checked)
             _products = result.Items
+            For Each cached In _imageCache.Values
+                If cached IsNot Nothing Then
+                    cached.Dispose()
+                End If
+            Next
+            _imageCache.Clear()
             _productsBindingSource.DataSource = Nothing
             _productsBindingSource.DataSource = _products
             UpdateBanner()
@@ -157,6 +169,34 @@ Public Class MainForm
         _selectedProduct = CType(row.DataBoundItem, ProductDto)
         _selectedProductLabel.Text = $"{_selectedProduct.Name} - currently {_selectedProduct.QuantityOnHand} on hand"
         LoadHistoryAsync(_selectedProduct.Id)
+        ShowProductImageAsync(_selectedProduct)
+    End Sub
+
+    Private Async Sub ShowProductImageAsync(product As ProductDto)
+        If Not product.HasImage Then
+            _productPicture.Image = Nothing
+            Return
+        End If
+
+        Dim image As Image = Nothing
+        If Not _imageCache.TryGetValue(product.Id, image) Then
+            image = Await _apiClient.GetProductImageAsync(product.Id)
+            _imageCache(product.Id) = image
+        End If
+
+        ' The selection may have moved on while the image was downloading.
+        If _selectedProduct IsNot Nothing AndAlso _selectedProduct.Id = product.Id Then
+            _productPicture.Image = image
+        End If
+    End Sub
+
+    Private Sub OnReceiveClick(sender As Object, e As EventArgs)
+        Using dialog As New ReceiveForm(_apiClient)
+            dialog.ShowDialog(Me)
+        End Using
+
+        ' Receiving changes stock, so refresh the product list and its cached photos.
+        LoadProductsAsync()
     End Sub
 
     Private Async Sub LoadHistoryAsync(productId As String)

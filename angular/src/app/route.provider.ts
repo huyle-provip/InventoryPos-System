@@ -54,6 +54,29 @@ function configureRoutes(routesService: RoutesService) {
         order: 4,
         layout: eLayoutType.application,
       },
+      {
+        path: '/purchasing',
+        name: '::Menu:Purchasing',
+        iconClass: 'fas fa-truck',
+        order: 3,
+        layout: eLayoutType.application,
+      },
+      {
+        path: '/purchasing/suppliers',
+        name: '::Menu:Suppliers',
+        requiredPolicy: 'InventoryPos.Suppliers',
+        parentName: '::Menu:Purchasing',
+        order: 1,
+        layout: eLayoutType.application,
+      },
+      {
+        path: '/purchasing/purchase-orders',
+        name: '::Menu:PurchaseOrders',
+        requiredPolicy: 'InventoryPos.PurchaseOrders',
+        parentName: '::Menu:Purchasing',
+        order: 2,
+        layout: eLayoutType.application,
+      },
     ]);
   };
 }

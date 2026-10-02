@@ -12,4 +12,6 @@ public class SaleOrderItem : Entity<Guid>
     public int Quantity { get; set; }
 
     public decimal UnitPrice { get; set; }
+
+    public int ReturnedQuantity { get; set; }
 }

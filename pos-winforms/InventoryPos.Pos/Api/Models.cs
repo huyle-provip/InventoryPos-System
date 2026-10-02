@@ -42,6 +42,25 @@ public class ProductDto
     public int QuantityOnHand { get; set; }
     public int ReorderThreshold { get; set; }
     public bool IsLowStock { get; set; }
+    public bool HasImage { get; set; }
+}
+
+public enum DiscountType
+{
+    None = 0,
+    Percent = 1,
+    Amount = 2,
+}
+
+public enum PaymentMethod
+{
+    Cash = 1,
+    Card = 2,
+}
+
+public class PricingInfoDto
+{
+    public decimal TaxRatePercent { get; set; }
 }
 
 public class CreateSaleOrderItemDto
@@ -53,12 +72,25 @@ public class CreateSaleOrderItemDto
 public class CreateSaleOrderDto
 {
     public List<CreateSaleOrderItemDto> Items { get; set; } = new();
+    public DiscountType DiscountType { get; set; } = DiscountType.None;
+    public decimal DiscountValue { get; set; }
+    public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cash;
+    public decimal? AmountTendered { get; set; }
 }
 
 public class SaleOrderDto
 {
     public string Id { get; set; } = string.Empty;
+    public decimal Subtotal { get; set; }
+    public DiscountType DiscountType { get; set; }
+    public decimal DiscountValue { get; set; }
+    public decimal DiscountAmount { get; set; }
+    public decimal TaxRatePercent { get; set; }
+    public decimal TaxAmount { get; set; }
     public decimal TotalAmount { get; set; }
+    public PaymentMethod PaymentMethod { get; set; }
+    public decimal AmountTendered { get; set; }
+    public decimal ChangeGiven { get; set; }
     public DateTime CreationTime { get; set; }
     public List<SaleOrderItemDto> Items { get; set; } = new();
 }
