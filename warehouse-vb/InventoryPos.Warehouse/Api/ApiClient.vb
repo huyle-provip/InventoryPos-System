@@ -64,10 +64,13 @@ Namespace Api
             _httpClient.DefaultRequestHeaders.Authorization = Nothing
         End Sub
 
-        Public Async Function GetProductsAsync(Optional filter As String = Nothing) As Task(Of PagedResult(Of ProductDto))
+        Public Async Function GetProductsAsync(Optional filter As String = Nothing, Optional lowStockOnly As Boolean = False) As Task(Of PagedResult(Of ProductDto))
             Dim url = "/api/app/product?maxResultCount=1000"
             If Not String.IsNullOrWhiteSpace(filter) Then
                 url &= "&filter=" & Uri.EscapeDataString(filter)
+            End If
+            If lowStockOnly Then
+                url &= "&lowStockOnly=true"
             End If
 
             Return Await GetAsync(Of PagedResult(Of ProductDto))(url)

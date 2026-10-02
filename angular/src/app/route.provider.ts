@@ -25,6 +25,7 @@ function configureRoutes(routesService: RoutesService) {
       {
         path: '/inventory/categories',
         name: '::Menu:Categories',
+        requiredPolicy: 'InventoryPos.Categories',
         parentName: '::Menu:Catalog',
         order: 1,
         layout: eLayoutType.application,
@@ -32,6 +33,7 @@ function configureRoutes(routesService: RoutesService) {
       {
         path: '/inventory/products',
         name: '::Menu:Products',
+        requiredPolicy: 'InventoryPos.Products',
         parentName: '::Menu:Catalog',
         order: 2,
         layout: eLayoutType.application,
@@ -39,6 +41,7 @@ function configureRoutes(routesService: RoutesService) {
       {
         path: '/inventory/stock',
         name: '::Menu:StockTransactions',
+        requiredPolicy: 'InventoryPos.StockTransactions',
         parentName: '::Menu:Catalog',
         order: 3,
         layout: eLayoutType.application,
@@ -46,6 +49,7 @@ function configureRoutes(routesService: RoutesService) {
       {
         path: '/inventory/sales',
         name: '::Menu:SaleOrders',
+        requiredPolicy: 'InventoryPos.SaleOrders',
         parentName: '::Menu:Catalog',
         order: 4,
         layout: eLayoutType.application,

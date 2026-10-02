@@ -40,8 +40,9 @@
 </div>
 
 <div class="card">
-  <div class="card-header">
+  <div class="card-header d-flex justify-content-between align-items-center">
     <h5 class="mb-0">Stock Transaction History</h5>
+    <button class="btn btn-sm btn-outline-secondary" type="button" (click)="exportCsv()">Export CSV</button>
   </div>
   <div class="card-body">
     <table class="table table-striped">

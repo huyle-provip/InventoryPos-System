@@ -10,6 +10,8 @@ Public Class MainForm
 
     Private ReadOnly _searchBox As New TextBox With {.Left = 12, .Top = 12, .Width = 300}
     Private ReadOnly _searchButton As New Button With {.Left = 320, .Top = 11, .Width = 90, .Text = "Search"}
+    Private ReadOnly _lowStockCheck As New CheckBox With {.Left = 425, .Top = 13, .Width = 150, .Text = "Low stock only"}
+    Private ReadOnly _bannerLabel As New Label With {.Left = 12, .Top = 534, .Width = 560, .Height = 28, .Font = New Font("Segoe UI", 10, FontStyle.Bold)}
     Private ReadOnly _productsGrid As New DataGridView With {
         .Left = 12, .Top = 44, .Width = 560, .Height = 480,
         .ReadOnly = True, .AllowUserToAddRows = False, .AllowUserToDeleteRows = False,
@@ -58,12 +60,16 @@ Public Class MainForm
                                                LoadProductsAsync()
                                            End If
                                        End Sub
+        AddHandler _lowStockCheck.CheckedChanged, Sub() LoadProductsAsync()
+        AddHandler _productsGrid.RowPrePaint, AddressOf OnProductsRowPrePaint
         AddHandler _productsGrid.SelectionChanged, AddressOf OnProductSelectionChanged
         AddHandler _submitButton.Click, AddressOf OnSubmitClick
         AddHandler _logoutButton.Click, AddressOf OnLogoutClick
 
         Controls.Add(_searchBox)
         Controls.Add(_searchButton)
+        Controls.Add(_lowStockCheck)
+        Controls.Add(_bannerLabel)
         Controls.Add(_productsGrid)
         Controls.Add(_selectedProductLabel)
         Controls.Add(_typeCombo)
@@ -96,15 +102,48 @@ Public Class MainForm
     Private Async Sub LoadProductsAsync()
         Try
             _statusLabel.Text = String.Empty
-            Dim result = Await _apiClient.GetProductsAsync(_searchBox.Text.Trim())
+            Dim result = Await _apiClient.GetProductsAsync(_searchBox.Text.Trim(), _lowStockCheck.Checked)
             _products = result.Items
             _productsBindingSource.DataSource = Nothing
             _productsBindingSource.DataSource = _products
+            UpdateBanner()
         Catch ex As ApiException
             _statusLabel.Text = ex.Message
         Catch ex As Net.Http.HttpRequestException
             _statusLabel.Text = "Could not reach the server."
         End Try
+    End Sub
+
+    Private Sub UpdateBanner()
+        Dim lowCount = _products.Where(Function(p) p.IsLowStock).Count()
+        Dim outCount = _products.Where(Function(p) p.QuantityOnHand <= 0).Count()
+
+        If lowCount = 0 Then
+            _bannerLabel.ForeColor = Color.SeaGreen
+            _bannerLabel.Text = "All listed products are well stocked."
+        Else
+            _bannerLabel.ForeColor = Color.Firebrick
+            _bannerLabel.Text = $"{lowCount} low-stock item(s), {outCount} out of stock - reorder soon."
+        End If
+    End Sub
+
+    Private Sub OnProductsRowPrePaint(sender As Object, e As DataGridViewRowPrePaintEventArgs)
+        Dim row = _productsGrid.Rows(e.RowIndex)
+        Dim product = TryCast(row.DataBoundItem, ProductDto)
+        If product Is Nothing Then
+            Return
+        End If
+
+        If product.QuantityOnHand <= 0 Then
+            row.DefaultCellStyle.BackColor = Color.IndianRed
+            row.DefaultCellStyle.ForeColor = Color.White
+        ElseIf product.IsLowStock Then
+            row.DefaultCellStyle.BackColor = Color.MistyRose
+            row.DefaultCellStyle.ForeColor = Color.Firebrick
+        Else
+            row.DefaultCellStyle.BackColor = Color.White
+            row.DefaultCellStyle.ForeColor = Color.Black
+        End If
     End Sub
 
     Private Sub OnProductSelectionChanged(sender As Object, e As EventArgs)

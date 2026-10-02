@@ -8,9 +8,11 @@ public class MainForm : Form
     private readonly BindingSource _productsBindingSource = new();
     private readonly BindingSource _cartBindingSource = new();
     private readonly List<CartLine> _cart = new();
+    private List<ProductDto> _products = new();
 
-    private readonly TextBox _searchBox = new() { Left = 12, Top = 12, Width = 300 };
-    private readonly Button _searchButton = new() { Left = 320, Top = 11, Width = 90, Text = "Search" };
+    private readonly TextBox _searchBox = new() { Left = 12, Top = 12, Width = 240, PlaceholderText = "Search name or SKU (F3)" };
+    private readonly Button _searchButton = new() { Left = 258, Top = 11, Width = 70, Text = "Search" };
+    private readonly TextBox _skuBox = new() { Left = 340, Top = 12, Width = 232, PlaceholderText = "Scan / enter SKU + Enter (F2)" };
     private readonly DataGridView _productsGrid = new()
     {
         Left = 12,
@@ -50,10 +52,12 @@ public class MainForm : Form
     {
         _apiClient = apiClient;
 
-        Text = "InventoryPos - Point of Sale";
+        Text = "InventoryPos - Point of Sale   [F2 SKU | F3 Search | F9 Checkout]";
         Width = 1100;
         Height = 680;
         StartPosition = FormStartPosition.CenterScreen;
+        KeyPreview = true;
+        KeyDown += OnFormKeyDown;
 
         BuildProductsGridColumns();
         BuildCartGridColumns();
@@ -69,6 +73,7 @@ public class MainForm : Form
                 await LoadProductsAsync();
             }
         };
+        _skuBox.KeyDown += OnSkuBoxKeyDown;
         _addToCartButton.Click += OnAddToCartClick;
         _removeLineButton.Click += OnRemoveLineClick;
         _checkoutButton.Click += OnCheckoutClick;
@@ -76,6 +81,7 @@ public class MainForm : Form
 
         Controls.Add(_searchBox);
         Controls.Add(_searchButton);
+        Controls.Add(_skuBox);
         Controls.Add(_productsGrid);
         Controls.Add(_quantityPicker);
         Controls.Add(_addToCartButton);
@@ -111,7 +117,8 @@ public class MainForm : Form
         {
             _statusLabel.Text = string.Empty;
             var result = await _apiClient.GetProductsAsync(_searchBox.Text.Trim());
-            _productsBindingSource.DataSource = result.Items;
+            _products = result.Items;
+            _productsBindingSource.DataSource = _products;
         }
         catch (ApiException ex)
         {
@@ -131,9 +138,22 @@ public class MainForm : Form
             return;
         }
 
-        var quantity = (int)_quantityPicker.Value;
+        AddToCart(product, (int)_quantityPicker.Value);
+    }
 
+    private void AddToCart(ProductDto product, int quantity)
+    {
         var existingLine = _cart.FirstOrDefault(l => l.ProductId == product.Id);
+        var alreadyInCart = existingLine?.Quantity ?? 0;
+
+        if (alreadyInCart + quantity > product.QuantityOnHand)
+        {
+            _statusLabel.Text = $"Only {product.QuantityOnHand} of '{product.Name}' in stock ({alreadyInCart} already in cart).";
+            return;
+        }
+
+        _statusLabel.Text = string.Empty;
+
         if (existingLine != null)
         {
             existingLine.Quantity += quantity;
@@ -150,6 +170,53 @@ public class MainForm : Form
         }
 
         RefreshCart();
+    }
+
+    private void OnSkuBoxKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.KeyCode != Keys.Enter)
+        {
+            return;
+        }
+
+        e.SuppressKeyPress = true;
+        var sku = _skuBox.Text.Trim();
+        if (sku.Length == 0)
+        {
+            return;
+        }
+
+        var product = _products.FirstOrDefault(p => string.Equals(p.Sku, sku, StringComparison.OrdinalIgnoreCase));
+        if (product == null)
+        {
+            _statusLabel.Text = $"No product with SKU '{sku}'.";
+        }
+        else
+        {
+            AddToCart(product, (int)_quantityPicker.Value);
+        }
+
+        _skuBox.Clear();
+        _skuBox.Focus();
+    }
+
+    private void OnFormKeyDown(object? sender, KeyEventArgs e)
+    {
+        switch (e.KeyCode)
+        {
+            case Keys.F2:
+                _skuBox.Focus();
+                e.Handled = true;
+                break;
+            case Keys.F3:
+                _searchBox.Focus();
+                e.Handled = true;
+                break;
+            case Keys.F9:
+                OnCheckoutClick(_checkoutButton, EventArgs.Empty);
+                e.Handled = true;
+                break;
+        }
     }
 
     private void OnRemoveLineClick(object? sender, EventArgs e)
@@ -188,11 +255,15 @@ public class MainForm : Form
 
             var order = await _apiClient.CreateSaleOrderAsync(input);
 
-            MessageBox.Show(
-                $"Sale completed.\n\nTotal: {order.TotalAmount:C2}\nItems: {order.Items.Count}",
-                "Receipt",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
+            var receiptLines = _cart.Select(l => new CartLine
+            {
+                ProductId = l.ProductId,
+                ProductName = l.ProductName,
+                UnitPrice = l.UnitPrice,
+                Quantity = l.Quantity,
+            }).ToList();
+
+            ReceiptPrinter.ShowPreview(this, order, receiptLines);
 
             _cart.Clear();
             RefreshCart();

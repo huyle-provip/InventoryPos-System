@@ -57,7 +57,7 @@ npm install
 npx ng serve
 ```
 
-Open `http://localhost:4200`, log in with `admin` / `1q2w3E*`. The **Catalog** menu has Categories, Products, Stock Transactions, and Sale Orders.
+Open `http://localhost:4200`, log in with `admin` / `1q2w3E*`. The home page is a **Dashboard** (today's sales, product count, low-stock count, inventory value, 7-day sales chart, top sellers, low-stock list), served by one backend call (`GET /api/app/dashboard`). The **Catalog** menu has Categories, Products, Stock Transactions, and Sale Orders; Products, Stock Transactions and Sale Orders each have an **Export CSV** button.
 
 If the backend's client-side libs (`wwwroot/libs`) are ever missing (500 errors on every page), regenerate them from `aspnet-core/src/InventoryPos.HttpApi.Host`:
 
@@ -73,7 +73,7 @@ cd pos-winforms/InventoryPos.Pos
 dotnet run
 ```
 
-Log in with the same admin credentials, pick a product, set a quantity, **Add to Cart**, then **Checkout**.
+Log in (`cashier` / `1q2w3E*` or `admin`), then either pick a product and set a quantity, or type/scan a SKU into the quick-entry box and press Enter. **F2** focuses the SKU box, **F3** the search box, **F9** checks out. Checkout opens a print-preview receipt you can print.
 
 ### 4. VB.NET Warehouse app
 
@@ -82,7 +82,19 @@ cd warehouse-vb/InventoryPos.Warehouse
 dotnet run
 ```
 
-Log in, select a product, choose **Stock In** or **Stock Out**, enter a quantity, and **Submit**.
+Log in (`warehouse` / `1q2w3E*` or `admin`), select a product, choose **Stock In** or **Stock Out**, enter a quantity, and **Submit**. Low-stock rows are tinted red (out-of-stock rows are solid red), a banner counts them, and **Low stock only** filters the list.
+
+## Roles
+
+`DbMigrator` seeds two demo roles and users (password `1q2w3E*` for all demo accounts):
+
+| User | Role | Can do |
+|---|---|---|
+| `admin` | admin | Everything |
+| `cashier` | Cashier | View products/categories, create and view sales |
+| `warehouse` | Warehouse | View products/categories, record and view stock transactions |
+
+The Angular menu hides pages a role can't use, and the API enforces the same permissions server-side. Manage roles under **Administration > Identity Management**. After pulling this change, re-run `DbMigrator` once to create the roles and users.
 
 Both desktop apps authenticate against the backend's existing `InventoryPos_App` OpenIddict client using the OAuth2 **password** grant (already enabled on that client by default in the ABP template) — no extra backend configuration was needed for this.
 

@@ -7,6 +7,7 @@ import { CreateStockTransactionDto, StockTransactionDto } from '../../proxy/stoc
 import { StockTransactionType } from '../../proxy/stocks/stock-transaction-type.enum';
 import { ProductService } from '../../proxy/catalog/product.service';
 import { ProductDto } from '../../proxy/catalog/models';
+import { csvTimestamp, downloadCsv } from '../../shared/csv.util';
 
 @Component({
   standalone: false,
@@ -36,7 +37,24 @@ export class StockComponent implements OnInit {
     private toaster: ToasterService,
   ) {}
 
+  exportCsv() {
+    this.stockTransactionService.getList({ maxResultCount: 1000 }).subscribe(result => {
+      downloadCsv(
+        `stock-transactions-${csvTimestamp()}.csv`,
+        ['Date', 'Product', 'Type', 'Quantity', 'Note'],
+        result.items.map(tx => [
+          tx.creationTime,
+          this.productName(tx.productId),
+          tx.type === StockTransactionType.In ? 'In' : 'Out',
+          tx.quantity,
+          tx.note,
+        ]),
+      );
+    });
+  }
+
   ngOnInit() {
+    this.list.maxResultCount = 100;
     this.loadProducts();
 
     const transactionStreamCreator = (query: any) => this.stockTransactionService.getList(query);

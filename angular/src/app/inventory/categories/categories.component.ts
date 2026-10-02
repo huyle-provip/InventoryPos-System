@@ -28,6 +28,7 @@ export class CategoriesComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.list.maxResultCount = 100;
     const categoryStreamCreator = (query: any) => this.categoryService.getList(query);
 
     this.list.hookToQuery(categoryStreamCreator).subscribe(result => {

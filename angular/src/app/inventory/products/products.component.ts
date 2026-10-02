@@ -6,6 +6,7 @@ import { ProductService } from '../../proxy/catalog/product.service';
 import { CategoryService } from '../../proxy/catalog/category.service';
 import { CreateUpdateProductDto, ProductDto, GetProductListDto } from '../../proxy/catalog/models';
 import { CategoryDto } from '../../proxy/catalog/models';
+import { csvTimestamp, downloadCsv } from '../../shared/csv.util';
 
 @Component({
   standalone: false,
@@ -34,7 +35,32 @@ export class ProductsComponent implements OnInit {
     private toaster: ToasterService,
   ) {}
 
+  exportCsv() {
+    this.productService
+      .getList({
+        maxResultCount: 1000,
+        filter: this.filterText,
+        lowStockOnly: this.lowStockOnly || undefined,
+      })
+      .subscribe(result => {
+        downloadCsv(
+          `products-${csvTimestamp()}.csv`,
+          ['SKU', 'Name', 'Category', 'Price', 'On Hand', 'Reorder At', 'Low Stock'],
+          result.items.map(p => [
+            p.sku,
+            p.name,
+            this.categoryName(p.categoryId),
+            p.price,
+            p.quantityOnHand,
+            p.reorderThreshold,
+            p.isLowStock ? 'Yes' : 'No',
+          ]),
+        );
+      });
+  }
+
   ngOnInit() {
+    this.list.maxResultCount = 100;
     this.categoryService.getList({ maxResultCount: 1000 }).subscribe(result => (this.categories = result.items));
 
     const productStreamCreator = (query: any) =>
