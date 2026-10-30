@@ -5,6 +5,7 @@ using InventoryPos.Catalog;
 using Shouldly;
 using Volo.Abp;
 using Volo.Abp.Data;
+using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Modularity;
 using Volo.Abp.Uow;
@@ -89,6 +90,38 @@ public abstract class SaleOrderAppServiceTests<TStartupModule> : InventoryPosApp
 
         sale.DiscountAmount.ShouldBe(10m);
         sale.TotalAmount.ShouldBe(0m);
+    }
+
+    [Fact]
+    public async Task Repeated_Lines_For_One_Product_Share_The_Stock_Check()
+    {
+        var productId = await CreateProductAsync(quantity: 5);
+        var input = SaleOf(productId, 3);
+        input.Items.Add(new CreateSaleOrderItemDto { ProductId = productId, Quantity = 3 });
+
+        await Should.ThrowAsync<UserFriendlyException>(() => _saleOrderAppService.CreateAsync(input));
+
+        (await GetQuantityOnHandAsync(productId)).ShouldBe(5);
+    }
+
+    [Fact]
+    public async Task Sale_With_Several_Products_Reduces_Each_Stock()
+    {
+        var first = await CreateProductAsync(quantity: 10);
+        var second = await CreateProductAsync(quantity: 10);
+        var input = SaleOf(first, 2);
+        input.Items.Add(new CreateSaleOrderItemDto { ProductId = second, Quantity = 5 });
+
+        await _saleOrderAppService.CreateAsync(input);
+
+        (await GetQuantityOnHandAsync(first)).ShouldBe(8);
+        (await GetQuantityOnHandAsync(second)).ShouldBe(5);
+    }
+
+    [Fact]
+    public async Task Selling_An_Unknown_Product_Is_Rejected()
+    {
+        await Should.ThrowAsync<EntityNotFoundException>(() => _saleOrderAppService.CreateAsync(SaleOf(Guid.NewGuid(), 1)));
     }
 
     [Fact]
