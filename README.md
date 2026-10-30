@@ -12,7 +12,7 @@ All three talk to the same backend (`InventoryPos.HttpApi.Host`) over its REST A
 
 ## Why ABP Framework instead of ASP.NET Zero
 
-ASP.NET Zero is a commercial product that requires a paid license (after a trial) and an aspnetzero.com account. ABP Framework is the free, open-source engine that ASP.NET Zero itself is built on top of, and provides the same core features used here — multi-tenancy-ready identity, role/permission management, an admin UI theme, and OpenIddict-based auth — with no license required.
+ASP.NET Zero is a commercial starter template sold by Volosoft with a paid license (about $2,999 at the time of writing) and no free trial. ABP Framework is the free, open-source framework from the same team. It is a separate codebase from the ASP.NET Boilerplate base that ASP.NET Zero is built on, but it shares the same architecture family (layered DDD, application services, permissions, multi-tenancy) and provides the core features used here — multi-tenancy-ready identity, role/permission management, an admin UI theme, and OpenIddict-based auth — with no license required. This project therefore uses ABP Framework as a free stand-in for the ASP.NET Zero requirement.
 
 ## Domain model
 
@@ -134,4 +134,4 @@ InventoryPos-System/
 
 ## Out of scope (by design)
 
-No real barcode scanner/printer hardware, no multi-tenant UI, no discounts/tax, no payment gateway — kept out to stay focused on the three required tech stacks and a learnable scope.
+No real barcode scanner/printer hardware, no multi-tenant UI, no real payment gateway (payments are recorded as cash/card only) — kept out to stay focused on the three required tech stacks and a learnable scope.
