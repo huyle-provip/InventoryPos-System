@@ -5,6 +5,14 @@ namespace InventoryPos.Purchasing;
 
 public class PurchaseOrderItem : Entity<Guid>
 {
+    protected PurchaseOrderItem()
+    {
+    }
+
+    public PurchaseOrderItem(Guid id) : base(id)
+    {
+    }
+
     public Guid PurchaseOrderId { get; set; }
 
     public Guid ProductId { get; set; }

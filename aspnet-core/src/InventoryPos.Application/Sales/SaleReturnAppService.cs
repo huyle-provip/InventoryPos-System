@@ -80,7 +80,7 @@ public class SaleReturnAppService : InventoryPosAppService, ISaleReturnAppServic
                 Note = $"Return of sale {order.Id.ToString()[..8]}"
             });
 
-            saleReturn.Items.Add(new SaleReturnItem
+            saleReturn.Items.Add(new SaleReturnItem(GuidGenerator.Create())
             {
                 SaleOrderItemId = orderItem.Id,
                 ProductId = orderItem.ProductId,

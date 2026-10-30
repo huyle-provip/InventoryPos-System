@@ -5,6 +5,14 @@ namespace InventoryPos.Sales;
 
 public class SaleOrderItem : Entity<Guid>
 {
+    protected SaleOrderItem()
+    {
+    }
+
+    public SaleOrderItem(Guid id) : base(id)
+    {
+    }
+
     public Guid SaleOrderId { get; set; }
 
     public Guid ProductId { get; set; }

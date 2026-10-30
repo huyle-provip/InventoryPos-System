@@ -54,7 +54,7 @@ public class PurchaseOrderAppService : InventoryPosAppService, IPurchaseOrderApp
                 throw new UserFriendlyException("One of the products no longer exists.");
             }
 
-            order.Items.Add(new PurchaseOrderItem
+            order.Items.Add(new PurchaseOrderItem(GuidGenerator.Create())
             {
                 ProductId = line.ProductId,
                 QuantityOrdered = line.Quantity,

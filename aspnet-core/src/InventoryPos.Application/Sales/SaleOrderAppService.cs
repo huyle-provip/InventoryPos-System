@@ -8,6 +8,7 @@ using InventoryPos.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
+using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Settings;
 
@@ -34,20 +35,31 @@ public class SaleOrderAppService : InventoryPosAppService, ISaleOrderAppService
     {
         var order = new SaleOrder();
 
+        // One query for all lines; lines for the same product share one entity so stock checks see earlier lines.
+        var productIds = input.Items.Select(i => i.ProductId).Distinct().ToList();
+        var products = (await _productRepository.GetListAsync(p => productIds.Contains(p.Id)))
+            .ToDictionary(p => p.Id);
+
+        // Validate everything before touching stock so a rejected sale never leaves a partial decrement behind.
+        var remaining = products.ToDictionary(p => p.Key, p => p.Value.QuantityOnHand);
+
         foreach (var itemInput in input.Items)
         {
-            var product = await _productRepository.GetAsync(itemInput.ProductId);
-
-            if (product.QuantityOnHand < itemInput.Quantity)
+            if (!products.TryGetValue(itemInput.ProductId, out var product))
             {
-                throw new UserFriendlyException(
-                    $"Not enough stock for '{product.Name}'. On hand: {product.QuantityOnHand}, requested: {itemInput.Quantity}.");
+                throw new EntityNotFoundException(typeof(Product), itemInput.ProductId);
             }
 
-            product.QuantityOnHand -= itemInput.Quantity;
-            await _productRepository.UpdateAsync(product);
+            if (remaining[product.Id] < itemInput.Quantity)
+            {
+                throw new UserFriendlyException(
+                    $"Not enough stock for '{product.Name}'. On hand: {remaining[product.Id]}, requested: {itemInput.Quantity}.");
+            }
 
-            order.Items.Add(new SaleOrderItem
+            remaining[product.Id] -= itemInput.Quantity;
+
+            // Siblings need distinct keys up front: EF tracks the whole graph before ABP assigns ids on save.
+            order.Items.Add(new SaleOrderItem(GuidGenerator.Create())
             {
                 ProductId = product.Id,
                 Quantity = itemInput.Quantity,
@@ -57,6 +69,12 @@ public class SaleOrderAppService : InventoryPosAppService, ISaleOrderAppService
 
         var taxRate = await GetTaxRatePercentAsync();
         ApplyPricing(order, input, taxRate);
+
+        foreach (var product in products.Values)
+        {
+            product.QuantityOnHand = remaining[product.Id];
+            await _productRepository.UpdateAsync(product);
+        }
 
         order = await _saleOrderRepository.InsertAsync(order);
 
