@@ -8,7 +8,15 @@ Friend Module Program
         Application.EnableVisualStyles()
         Application.SetCompatibleTextRenderingDefault(False)
 
-        Dim apiClient As New ApiClient()
+        Dim settings As ApiSettings
+        Try
+            settings = ApiSettings.Load()
+        Catch ex As Exception When TypeOf ex Is InvalidOperationException OrElse TypeOf ex Is IO.FileNotFoundException OrElse TypeOf ex Is IO.InvalidDataException
+            MessageBox.Show(ex.Message, "Configuration error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Return
+        End Try
+
+        Dim apiClient As New ApiClient(settings)
         Dim loginForm As New LoginForm(apiClient)
 
         If loginForm.ShowDialog() = DialogResult.OK Then

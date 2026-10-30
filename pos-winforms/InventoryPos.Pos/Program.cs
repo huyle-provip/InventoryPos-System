@@ -9,7 +9,18 @@ static class Program
     {
         ApplicationConfiguration.Initialize();
 
-        var apiClient = new ApiClient();
+        ApiSettings settings;
+        try
+        {
+            settings = ApiSettings.Load();
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or FileNotFoundException or InvalidDataException)
+        {
+            MessageBox.Show(ex.Message, "Configuration error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
+        var apiClient = new ApiClient(settings);
         var loginForm = new LoginForm(apiClient);
 
         if (loginForm.ShowDialog() == DialogResult.OK)

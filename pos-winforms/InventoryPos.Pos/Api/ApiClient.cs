@@ -18,13 +18,18 @@ public class ApiClient
         PropertyNameCaseInsensitive = true,
     };
 
-    private readonly ApiSettings _settings = ApiSettings.Load();
+    private readonly ApiSettings _settings;
     private readonly HttpClient _httpClient;
     private string? _refreshToken;
 
-    public ApiClient()
+    public ApiClient(ApiSettings settings)
     {
-        _httpClient = new HttpClient { BaseAddress = new Uri(_settings.BaseUrl), Timeout = TimeSpan.FromSeconds(30) };
+        _settings = settings;
+        _httpClient = new HttpClient
+        {
+            BaseAddress = new Uri(settings.BaseUrl),
+            Timeout = TimeSpan.FromSeconds(settings.TimeoutSeconds),
+        };
     }
 
     public string? AccessToken { get; private set; }

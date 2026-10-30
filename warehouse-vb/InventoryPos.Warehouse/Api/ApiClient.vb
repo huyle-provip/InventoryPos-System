@@ -18,14 +18,15 @@ Namespace Api
             .PropertyNameCaseInsensitive = True
         }
 
-        Private ReadOnly _settings As ApiSettings = ApiSettings.Load()
+        Private ReadOnly _settings As ApiSettings
         Private ReadOnly _httpClient As HttpClient
         Private _refreshToken As String
 
-        Public Sub New()
+        Public Sub New(settings As ApiSettings)
+            _settings = settings
             _httpClient = New HttpClient With {
-                .BaseAddress = New Uri(_settings.BaseUrl),
-                .Timeout = TimeSpan.FromSeconds(30)
+                .BaseAddress = New Uri(settings.BaseUrl),
+                .Timeout = TimeSpan.FromSeconds(settings.TimeoutSeconds)
             }
         End Sub
 
