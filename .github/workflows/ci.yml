@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Test backend
+        run: dotnet test aspnet-core/test/InventoryPos.EntityFrameworkCore.Tests
+
+  desktop:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Build POS (C#)
+        run: dotnet build pos-winforms/InventoryPos.Pos
+      - name: Build Warehouse (VB.NET)
+        run: dotnet build warehouse-vb/InventoryPos.Warehouse
+
+  angular:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: angular
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+          cache-dependency-path: angular/yarn.lock
+      - run: yarn install --frozen-lockfile --ignore-engines
+      - run: npx ng test --watch=false --browsers=ChromeHeadlessCI
+      - run: npx ng build
