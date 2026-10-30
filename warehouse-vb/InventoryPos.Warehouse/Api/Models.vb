@@ -11,6 +11,9 @@ Namespace Api
 
         <JsonPropertyName("expires_in")>
         Public Property ExpiresIn As Integer
+
+        <JsonPropertyName("refresh_token")>
+        Public Property RefreshToken As String
     End Class
 
     Public Class ApiErrorDetail
